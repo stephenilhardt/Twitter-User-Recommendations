@@ -1,11 +1,10 @@
 import numpy as np
 import pandas as pd
 
-import tweepy
 import json
 import time
 
-from pymongo import MongoClient
+import tweepy
 
 from twitter_credentials import credentials
 
@@ -28,6 +27,8 @@ def handle_limit(cursor):
 			continue
 		except StopIteration:
 			break
+		except TypeError:
+			break
 
 def get_seed_list(api=get_api(), username='stephenilhardt', twitter_list='data-scientists'):
 
@@ -40,18 +41,34 @@ def get_seed_list(api=get_api(), username='stephenilhardt', twitter_list='data-s
 
 	return user_list
 	
+def get_list_ids(api=get_api(), username='stephenilhardt', twitter_list='data-scientists'):
+
+	user_list = []
+
+	for user in tweepy.Cursor(api.list_members, username, twitter_list).items():
+
+		user_list.append(user._json['id'])
+
+	return user_list
+
 def get_data_scientists(api=get_api(), seed_list=get_seed_list()):
 
-	ds_accounts = pd.DataFrame(columns=['name','id','counter'])
+	ds_accounts = []
 
 	for user in seed_list:
-		for friends_id in handle_limit(tweepy.Cursor(api.friends_ids, user._json['id']).items()):
-			friend_frame = pd.DataFrame()
+		cursor = tweepy.Cursor(api.friends_ids, user._json['id']).pages()
 
-			friend_frame['name'] = user._json['name']
-			friend_frame['id'] = friends_id
-			friend_frame['counter'] = 1
+		if cursor:
 
-			ds_accounts.append(friend_frame)
+			for friends_id in handle_limit(cursor):
+
+				ds_accounts.append(friends_id)
+
+		else:
+			pass
 
 	return ds_accounts
+
+if __name__ == '__main__':
+
+	get_data_scientists()
