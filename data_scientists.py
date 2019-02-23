@@ -5,8 +5,16 @@ import json
 import time
 
 import tweepy
+from pymongo import MongoClient
 
 from twitter_credentials import credentials
+
+config = {
+    'host': '127.0.0.1:27017',
+    'username': 'mongo_user',
+    'password': 'project-fletcher',
+    'authSource': 'tweets'
+}
 
 def get_api(consumer_key=credentials['TWITTER_CONSUMER_KEY'],consumer_secret=credentials['TWITTER_CONSUMER_KEY_SECRET'],
 	access_token_key=credentials['TWITTER_ACCESS_TOKEN'],access_token_secret=credentials['TWITTER_ACCESS_TOKEN_SECRET']):
@@ -50,6 +58,18 @@ def get_list_ids(api=get_api(), username='stephenilhardt', twitter_list='ds-proj
 		user_list.append(user._json['id_str'])
 
 	return user_list
+
+def get_mongo_ids(connection=config):
+
+	client = MongoClient(**connection)
+	db = client.tweets
+
+	user_ids = []
+
+	for user in db.ds_users.find():
+		user_ids.append(user['id_str'])
+
+	return user_ids
 
 def get_data_scientists(api=get_api(), seed_list=get_seed_list()):
 

@@ -22,7 +22,7 @@ tweet_collection = db.ds_tweets
 
 api = data_scientists.get_api()
 
-user_list = data_scientists.get_list_ids(api=api)
+user_list = data_scientists.get_mongo_ids(config)
 
 class MyStreamListener(tweepy.StreamListener):
 
@@ -40,7 +40,12 @@ class MyStreamListener(tweepy.StreamListener):
 			if tweet['in_reply_to_user_id_str'] not in self.following:
 
 				print('User:', tweet['in_reply_to_user_id_str'])
+
 				api.add_list_member(owner_screen_name='stephenilhardt',slug='ds-project-list', user_id=tweet['in_reply_to_user_id'])
+
+				user = api.get_user(tweet['in_reply_to_user_id'])
+				db.ds_users.insert_one(user)
+
 				self.following.append(tweet['in_reply_to_user_id_str'])
 
 		db.ds_tweets.insert_one(tweet)
