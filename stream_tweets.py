@@ -34,21 +34,19 @@ class MyStreamListener(tweepy.StreamListener):
 		tweet = json.loads(data)
 
 		if 'id' in tweet.keys():
+
 			print('Tweet:', tweet['id'])
+			db.ds_tweets.insert_one(tweet)
 
 		if 'in_reply_to_user_id_str' in tweet.keys() and tweet['in_reply_to_user_id_str'] != None:
 			if tweet['in_reply_to_user_id_str'] not in self.following:
 
 				print('User:', tweet['in_reply_to_user_id_str'])
 
-				api.add_list_member(owner_screen_name='stephenilhardt',slug='ds-project-list', user_id=tweet['in_reply_to_user_id'])
-
 				user = api.get_user(tweet['in_reply_to_user_id'])
-				db.ds_users.insert_one(user)
+				db.ds_users.insert_one(user._json)
 
 				self.following.append(tweet['in_reply_to_user_id_str'])
-
-		db.ds_tweets.insert_one(tweet)
 
 	def on_error(self, status_code):
 		print(status_code)
@@ -60,6 +58,6 @@ myStream = tweepy.Stream(auth = api.auth, listener=myStreamListener)
 
 if __name__ == '__main__':
 	
-	#print(myStreamListener.following)
+	print('Following:', len(myStreamListener.following))
 	myStream.filter(follow=myStreamListener.following)
 		
