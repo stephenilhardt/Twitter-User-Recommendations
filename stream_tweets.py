@@ -23,7 +23,7 @@ user_list = data_scientists.get_mongo_ids(config)
 
 class MyStreamListener(tweepy.StreamListener):
 
-	def __init__(self, follow, db, api):
+	def __init__(self, follow):
 		super().__init__()
 		self.following = follow
 
