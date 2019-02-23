@@ -41,13 +41,13 @@ def get_seed_list(api=get_api(), username='stephenilhardt', twitter_list='data-s
 
 	return user_list
 	
-def get_list_ids(api=get_api(), username='stephenilhardt', twitter_list='data-scientists'):
+def get_list_ids(api=get_api(), username='stephenilhardt', twitter_list='ds-project-list'):
 
 	user_list = []
 
 	for user in tweepy.Cursor(api.list_members, username, twitter_list).items():
 
-		user_list.append(user._json['id'])
+		user_list.append(user._json['id_str'])
 
 	return user_list
 
