@@ -18,17 +18,16 @@ config = {
 client = MongoClient(**config)
 
 db = client.tweets
-tweet_collection = db.ds_tweets
-
 api = data_scientists.get_api()
-
 user_list = data_scientists.get_mongo_ids(config)
 
 class MyStreamListener(tweepy.StreamListener):
 
-	def __init__(self, follow):
+	def __init__(self, follow, db, api):
 		super().__init__()
 		self.following = follow
+		self.db = db
+		self.api = api
 
 	def on_data(self, data):
 		tweet = json.loads(data)
@@ -36,15 +35,15 @@ class MyStreamListener(tweepy.StreamListener):
 		if 'id' in tweet.keys():
 
 			print('Tweet:', tweet['id'])
-			db.ds_tweets.insert_one(tweet)
+			self.db.ds_tweets.insert_one(tweet)
 
 		if 'in_reply_to_user_id_str' in tweet.keys() and tweet['in_reply_to_user_id_str'] != None:
 			if tweet['in_reply_to_user_id_str'] not in self.following:
 
 				print('User:', tweet['in_reply_to_user_id_str'])
 
-				user = api.get_user(tweet['in_reply_to_user_id'])
-				db.ds_users.insert_one(user._json)
+				user = self.api.get_user(tweet['in_reply_to_user_id'])
+				self.db.ds_users.insert_one(user._json)
 
 				self.following.append(tweet['in_reply_to_user_id_str'])
 
@@ -53,7 +52,7 @@ class MyStreamListener(tweepy.StreamListener):
 		if status_code == 420:
 			return False
 
-myStreamListener = MyStreamListener(user_list)
+myStreamListener = MyStreamListener(user_list, db, api)
 myStream = tweepy.Stream(auth = api.auth, listener=myStreamListener)
 
 if __name__ == '__main__':
